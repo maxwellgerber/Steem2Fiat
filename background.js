@@ -27,17 +27,35 @@ var fiat_values = {
   "ZAR":"R"
 }
 
-var defaults = {
+var user_defaults = {
   chosen_fiat: "USD",
-  datasource: "Bittrex",
-  payout_range: "77",
+  datasource: "CoinMarketCap",
+  payout_range: "50",
   curator: "true"
+}
+
+var application_defaults = {
+  api_payout_range: "100"
 }
 
 function NotifyTabs(){
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
   });
+}
+
+function GetConversionRate() {
+  return $.post("https://gtg.steem.house:8090/rpc", 
+    JSON.stringify({
+      id:17,
+      method:"get_current_median_history_price",
+      params:[], 
+      jsonrpc:2.0})
+    )
+}
+
+function InitFiatStores() {
+
 }
 
 chrome.runtime.onMessage.addListener(
@@ -48,6 +66,7 @@ chrome.runtime.onMessage.addListener(
     } else if (request.msg == "request_settings") {
       var settings = JSON.parse(localStorage.getItem("settings")) || defaults;
       settings.symbol = fiat_values[settings.chosen_fiat];
+      Object.assign(settings, application_defaults);
       sendResponse(settings);
     } else if (request.msg == "save_settings") {
       localStorage.setItem("settings", JSON.stringify(request.settings));
