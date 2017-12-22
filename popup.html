@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="css/popup.css">
+        <link rel="stylesheet" type="text/css" href="css/select.css">
+        <link rel="stylesheet" type="text/css" href="css/slider.css">
+        <script src="jquery.min.js"></script>
+        <script src="popup.js"></script>
+    </head>
+    <!-- Set tabindex to work around Chromium issue 304532 -->
+    <body tabindex="1">
+        <header>
+            <img id="logo" src="steem_icon.png">
+            <h2>Steem2Fiat</h2>
+        </header>
+        <hr>
+        <div class="wrapper">
+            <label for="fiat">Fiat Value</label>
+            <div class="styled-select blue semi-square right-input">
+                <select id="fiat"></select>
+            </div>
+        </div>
+        <div class="wrapper">
+            <label for="datasource">Source</label>
+            <div class="styled-select blue semi-square right-input">
+                <select id="datasource">
+                    <option value="CoinMarketCap">CoinMarketCap</option>
+                    <option value="Bittrex">Bittrex</option>
+                    <option value="Poloniex">Poloniex</option>
+                    <option value="HitBTC">HitBTC</option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div class="wrapper">
+            <label>
+                <input type="checkbox" id="curator" value="curator">Include Curator Rewards
+            </label>
+        </div>
+        <hr>
+        <div class="wrapper">
+            <span class="left-input">SBD</span>
+            <span class="right-input">Steem</span>
+            <div class="rangewrapper">
+                <input type="range" min="0" max="100" value="50" class="slider" id="payout_range">
+            </div>
+        </div>
+        <div class="wrapper">
+            <input type="number" min="0" max="100" value="50" class="left-input number-input" id="payout_sbd">
+            <input type="number" min="0" max="100" value="50" class="right-input number-input" id="payout_steem">
+        </div>
+        <hr>
+        <div class="wrapper">
+            <button id="saveButton" class="button" style="margin-left: 55.8px">Save Settings</button>
+        </div>
+    </body>
+</html>
