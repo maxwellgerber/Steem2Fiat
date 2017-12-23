@@ -3,6 +3,8 @@ var settings = {}
 
 function crawlPage() {
 	// var imgurl = chrome.extension.getURL("steem_icon.png");
+	// console.log("Crawling page");
+	// console.log(settings)
 	var imgurl = "https://steemit-production-imageproxy-upload.s3.amazonaws.com/DQmPBTSoFeabenhqLDu3oYa2sxZCpCGn6dQPvaqBuwZSdyA";
 	$("span.FormattedAsset").each(function() {
 		var payout = this.dataset.s2f;
@@ -35,4 +37,4 @@ function init() {
 }
 init();
 
-chrome.extension.onMessage.addListener(init);
+chrome.extension.onMessage.addListener(function(){console.log("Recieved message");init()});

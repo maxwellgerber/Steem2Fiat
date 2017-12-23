@@ -9,6 +9,17 @@ function loadCountries() {
     });
 }
 
+function loadExchanges() {
+    chrome.runtime.sendMessage({
+        msg: "request_exchanges"
+    }, function(response) {
+        console.log(response);
+        $.each(response.exchanges, function(idx, exchange) {
+            $('#datasource').append($("<option></option>").attr("value", exchange).text(exchange));
+        });
+    });
+}
+
 function loadOptions() {
     chrome.runtime.sendMessage({
         msg: "request_settings"
@@ -106,6 +117,7 @@ function handleRatioChange() {
 
 $(document).ready(function() {
     loadCountries();
+    loadExchanges();
     loadOptions();
     $("#saveButton").click(saveOptions);
     $("#payout_sbd").change(calcSbd);

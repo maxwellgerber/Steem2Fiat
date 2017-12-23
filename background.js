@@ -36,6 +36,12 @@ const user_defaults = {
   custom_ratio: "false"
 }
 
+const exchanges = {
+  CoinMarketCap: GetCoinMarketCapRates,
+  Bittrex: GetBittrexRates,
+  Poloniex: GetPoloniexRates,
+  HitBTC: GetHitBTCRates
+}
 const application_defaults = {
   api_payout_range: 78
 }
@@ -88,6 +94,49 @@ function GetCoinMarketCapRates() {
     });
   });
 }
+
+function GetBittrexRates() {
+  return new Promise((resolve, reject) => {
+    $.when(
+      $.getJSON("https://bittrex.com/api/v1.1/public/getticker?market=BTC-STEEM"),
+      $.getJSON("https://bittrex.com/api/v1.1/public/getticker?market=BTC-SBD")
+    ).done((steemData, sbdData) => {
+      resolve({ 
+        steem_btc: Number(steemData[0].result.Last),
+        sbd_btc: Number(sbdData[0].result.Last)
+      });
+    });
+  });
+}
+
+
+function GetPoloniexRates() {
+  return new Promise((resolve, reject) => {
+    $.getJSON("https://poloniex.com/public?command=returnTicker")
+    .then((data) => {
+      resolve({ 
+        steem_btc: Number(data.BTC_STEEM.last),
+        sbd_btc: Number(data.BTC_SBD.last)
+      });
+    });
+  });
+}
+
+function GetHitBTCRates() {
+  return new Promise((resolve, reject) => {
+    $.when(
+      $.getJSON("https://api.hitbtc.com/api/2/public/ticker/STEEMBTC"),
+      $.getJSON("https://api.hitbtc.com/api/2/public/ticker/SBDBTC")
+    ).done((steemData, sbdData) => {
+      resolve({ 
+        steem_btc: Number(steemData[0].last),
+        sbd_btc: Number(sbdData[0].last)
+      });
+    });
+  });
+}
+
+
 
 
 function IsExpired(timestamp) {
@@ -148,27 +197,9 @@ class SettingsManager{
   }
 
   getBitcoinSteemRates() {
-    var key;
-    var ExchangeFunc;
-    switch(this.get("user_settings", user_defaults).datasource) {
-      case "Bittrex":
-        key = "rex_data";
-        ExchangeFunc = GetCoinMarketCapRates;
-        break;
-      case "Poloniex":
-        key = "polo_data";
-        ExchangeFunc = GetCoinMarketCapRates;
-        break;
-      case "HitBTC":
-        key = "hit_data";
-        ExchangeFunc = GetCoinMarketCapRates;
-        break;
-      case "CoinMarketCap":
-      default:
-        key = "cmc_data";
-        ExchangeFunc = GetCoinMarketCapRates;
-        break;
-    };
+    var datasource = this.get("user_settings", user_defaults).datasource;
+    var key = datasource + "_data";
+    var ExchangeFunc = exchanges[datasource];
     return new Promise((resolve, reject) => {      
       var stored = this.get(key);
       if (stored === undefined || IsExpired(stored.timestamp)) {
@@ -193,7 +224,7 @@ function CalculateDisplayInfo() {
       )
     .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
       var user_settings = Manager.get("user_settings", user_defaults);
-      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range : ratio/(ratio+1);
+      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range/100 : ratio/(ratio+1);
       var in_btc = bitcoinSteemRates.steem_btc * (1 - sbd_bias) + bitcoinSteemRates.sbd_btc * sbd_bias;
       var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
@@ -206,6 +237,7 @@ function CalculateDisplayInfo() {
 }
 
 function NotifyTabs(){
+  // console.log("Notifying Tabs");
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
   });
@@ -216,17 +248,23 @@ var Manager = new SettingsManager();
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.msg == "request_fiats") {
     sendResponse({fiat_values: fiat_values});
-  } else if (request.msg == "request_settings") {
+  } 
+  if (request.msg == "request_exchanges") {
+    sendResponse({exchanges: Object.keys(exchanges)});
+  } 
+  else if (request.msg == "request_settings") {
     Manager.getSteemSbdRatio().then(ratio => {
       var settings = Manager.get("user_settings", user_defaults);
       settings.api_payout_range = 100 * ratio/(ratio+1);
       sendResponse(settings);
     })
-  } else if (request.msg == "save_settings") {
+  } 
+  else if (request.msg == "save_settings") {
     Manager.set("user_settings", request.settings);
     sendResponse("ok");
     NotifyTabs();
-  } else if (request.msg == "request_display_info") {
+  } 
+  else if (request.msg == "request_display_info") {
     CalculateDisplayInfo()
       .then(sendResponse);
   }
