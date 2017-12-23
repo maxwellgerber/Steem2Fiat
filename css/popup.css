@@ -84,3 +84,13 @@ label {
     cursor: pointer;
     -webkit-user-drag: none;
 }
+
+.hidden {
+    display: none;
+}
+
+#loader {
+    height: 80px;
+    width: 80px;
+    margin: 0 85px;
+}

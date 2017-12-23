@@ -1,79 +1,211 @@
-var fiat_values = {
+const fiat_values = {
   "USD":"$",
   "AUD":"AU$",
   "BRL":"R$",
   "CAD":"C$",
   "CNY":"¥",
-  "CZK":"Kč",
+  // "CZK":"Kč",
   "DKK":"kr",
   "EUR":"€",
   "GBP":"£",
-  "IDR":"Rp",
-  "ILS":"₪",
-  "INR":"₹",
+  "HKD":"$",
+  // "IDR":"Rp",
+  // "ILS":"₪",
+  // "INR":"₹",
   "JPY":"¥",
   "KRW":"₩",
-  "MXN":"$",
+  // "MXN":"$",
   "NZD":"$",
-  "PHP":"₱",
-  "PKR":"Rp",
+  // "PHP":"₱",
+  // "PKR":"Rp",
   "PLN":"zł",
   "RUB":"₽",
   "SEK":"kr",
   "SGD":"S$",
   "THB":"฿",
-  "TRY":"₺",
+  // "TRY":"₺",
   "TWD":"NT$",
-  "ZAR":"R"
+  // "ZAR":"R"
 }
 
-var user_defaults = {
+const user_defaults = {
   chosen_fiat: "USD",
   datasource: "CoinMarketCap",
-  payout_range: "50",
+  payout_range: 50,
   curator: "true"
 }
 
-var application_defaults = {
-  api_payout_range: "100"
+const application_defaults = {
+  api_payout_range: 78
 }
 
-function NotifyTabs(){
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
+// Invalidate cache entries after 20 minutes
+const cache_timeout = 1000 * 60 * 20;
+
+
+function RPCSteemSbdRatio() {
+  return new Promise((resolve, reject) => {
+    $.post("https://steemd.steemit.com/rpc", 
+      JSON.stringify({
+        id:17,
+        method:"get_current_median_history_price",
+        params:[], 
+        jsonrpc:2.0})
+      )
+    .then(data => {
+      resolve(JSON.parse(data));
+    })
   });
 }
 
-function GetConversionRate() {
-  return $.post("https://gtg.steem.house:8090/rpc", 
-    JSON.stringify({
-      id:17,
-      method:"get_current_median_history_price",
-      params:[], 
-      jsonrpc:2.0})
-    )
+function GetBTCFiatExchangeRates() {
+  return new Promise((resolve, reject) => {
+    $.get("https://blockchain.info/ticker")
+      .then(data => {
+        var cleaned = {};
+        data.each((k, v) => {
+          cleaned[k] = v.last;
+        })
+        resolve(cleaned);
+      })
+  });
 }
 
-function InitFiatStores() {
-
+function GetCoinMarketCapRates() {
+  return new Promise((resolve, reject) => {
+    $.when(
+      $.getJSON("https://api.coinmarketcap.com/v1/ticker/STEEM/"),
+      $.getJSON("https://api.coinmarketcap.com/v1/ticker/STEEM-dollars/")
+    ).done((steemData, sbdData) => {
+      resolve({ 
+        steem_btc: Number(steemData[0][0]['price_btc']),
+        sbd_btc: Number(sbdData[0][0]['price_btc'])
+      });
+    });
+  });
 }
 
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    console.log(request);
-    if (request.msg == "request_fiats") {
-      sendResponse({fiat_values: fiat_values});
-    } else if (request.msg == "request_settings") {
-      var settings = JSON.parse(localStorage.getItem("settings")) || defaults;
-      settings.symbol = fiat_values[settings.chosen_fiat];
-      Object.assign(settings, application_defaults);
+
+function IsExpired(timestamp) {
+  return Date.now() - timestamp > cache_timeout;
+}
+
+
+
+class SettingsManager{
+
+  get(key, _default) {
+    return JSON.parse(localStorage.getItem(key)) || _default; 
+  }
+
+  set(key,val) {
+    console.log(val);
+    console.log(JSON.stringify(val));
+    localStorage.setItem(key, JSON.stringify(val)); 
+  }
+
+  getSteemSbdRatio() {
+    return new Promise((resolve, reject) => {      
+      var stored = this.get("steem_sbd_ratio");
+      if (stored === undefined || IsExpired(stored.timestamp)) {
+        RPCSteemSbdRatio().then(data => {
+          console.log(data);
+          console.log(typeof data);
+          console.log(data.result);
+          var temp = data.result.base;
+          console.log(temp);
+          temp = temp.substring(0, temp.length-4);
+          console.log(temp);
+          temp = Number(temp);
+          console.log(temp);
+          var obj = {value: temp, timestamp: Date.now()};
+          this.set("steem_sbd_ratio", obj);
+          resolve(obj.value); 
+        })
+      } else {
+        resolve(stored.value);
+      }
+    })
+  }
+
+  getBitcoinFiatRates() {
+    return new Promise((resolve, reject) => {      
+      var stored = this.get("btc_conversion_rates");
+      if (stored === undefined || IsExpired(stored.timestamp)) {
+        GetBTCFiatExchangeRates().then(data => {
+          var obj = {value: data, timestamp: Date.now()};
+          this.set("btc_conversion_rates", obj);
+          resolve(obj.value); 
+        })
+      } else {
+        resolve(stored.value);
+      }
+    })
+  }
+
+  getBitcoinSteemRates() {
+    var key;
+    var ExchangeFunc;
+    switch(this.get("user_settings", user_defaults).datasource) {
+      case "Bittrex":
+        key = "rex_data";
+        ExchangeFunc = GetCoinMarketCapRates;
+        break;
+      case "Poloniex":
+        key = "polo_data";
+        ExchangeFunc = GetCoinMarketCapRates;
+        break;
+      case "HitBTC":
+        key = "hit_data";
+        ExchangeFunc = GetCoinMarketCapRates;
+        break;
+      case "CoinMarketCap":
+      default:
+        key = "cmc_data";
+        ExchangeFunc = GetCoinMarketCapRates;
+        break;
+    };
+    return new Promise((resolve, reject) => {      
+      var stored = this.get(key);
+      if (stored === undefined || IsExpired(stored.timestamp)) {
+        ExchangeFunc().then(data => {
+          var obj = {value: data, timestamp: Date.now()};
+          this.set(key, obj);
+          resolve(obj.value); 
+        })
+      } else {
+        resolve(stored.value);
+      }
+    })
+  }
+}
+
+// function NotifyTabs(){
+//   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+//     chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
+//   });
+// }
+
+var Manager = new SettingsManager();
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.msg == "request_fiats") {
+    sendResponse({fiat_values: fiat_values});
+  } else if (request.msg == "request_settings") {
+    Manager.getSteemSbdRatio().then(ratio => {
+      var settings = Manager.get("user_settings", user_defaults);
+      settings.api_payout_range = 100 * ratio/(ratio+1);
       sendResponse(settings);
-    } else if (request.msg == "save_settings") {
-      localStorage.setItem("settings", JSON.stringify(request.settings));
-      sendResponse(JSON.parse(localStorage.getItem("settings")) || defaults);
-      NotifyTabs();
-    }
-    // Note: Returning true is required here!
-    //  ref: http://stackoverflow.com/questions/20077487/chrome-extension-message-passing-response-not-sent
-    return true; 
-  });
+    })
+  } else if (request.msg == "save_settings") {
+    Manager.set("user_settings", request.settings);
+    sendResponse("ok");
+    // NotifyTabs();
+  } else if (request.msg == "request_display_info") {
+
+
+  }
+  // Note: Returning true is required here!
+  //  ref: http://stackoverflow.com/questions/20077487/chrome-extension-message-passing-response-not-sent
+  return true; 
+});

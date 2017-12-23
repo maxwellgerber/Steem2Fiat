@@ -27,6 +27,11 @@ function loadOptions() {
             disableSelectors();
         }
         calcRange();
+        setTimeout(()=> {
+            $(".wrapper").removeClass("hidden");
+            $("hr").removeClass("hidden");
+            $("#loadWrapper").addClass("hidden");  
+        }, 450);
     });
 }
 

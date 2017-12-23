@@ -17,7 +17,7 @@ function BuildFoo(convert_rate, symbol) {
 	}
 }
 
-chrome.runtime.sendMessage({msg: "request_settings"}, function(response) {
+chrome.runtime.sendMessage({msg: "request_display_info"}, function(response) {
 	$.when(
 		$.getJSON(`https://api.coinmarketcap.com/v1/ticker/STEEM/?convert=${response.chosen_fiat}`),
 		$.getJSON(`https://api.coinmarketcap.com/v1/ticker/STEEM-dollars/?convert=${response.chosen_fiat}`),

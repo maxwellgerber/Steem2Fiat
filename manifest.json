@@ -22,6 +22,6 @@
 		"scripts": ["jquery.min.js", "background.js"]
 	},
 	"permissions": [
-		"storage"
+		"storage", "*://*/*"
 	]
 }
