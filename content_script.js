@@ -2,9 +2,6 @@
 var settings = {}
 
 function crawlPage() {
-	// var imgurl = chrome.extension.getURL("steem_icon.png");
-	// console.log("Crawling page");
-	// console.log(settings)
 	var imgurl = "https://steemit-production-imageproxy-upload.s3.amazonaws.com/DQmPBTSoFeabenhqLDu3oYa2sxZCpCGn6dQPvaqBuwZSdyA";
 	$("span.FormattedAsset").each(function() {
 		var payout = this.dataset.s2f;
@@ -20,7 +17,6 @@ function crawlPage() {
 	    ${settings.symbol}${fiat}&nbsp;<img src="${imgurl}" height=16.29 width=16.29 style="margin: -2px 1px 0 0">${payout}
 	  </span>
 	  `;
-	  // $(this).removeClass("FormattedAsset");
 	  $(this).html(innerHTML);
 	});
 }
