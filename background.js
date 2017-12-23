@@ -184,11 +184,32 @@ class SettingsManager{
   }
 }
 
-// function NotifyTabs(){
-//   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-//     chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
-//   });
-// }
+function CalculateDisplayInfo() {
+  return new Promise((resolve, reject) => {
+    $.when(
+      Manager.getSteemSbdRatio(),
+      Manager.getBitcoinSteemRates(),
+      Manager.getBitcoinFiatRates(),
+      )
+    .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
+      var user_settings = Manager.get("user_settings", user_defaults);
+      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range : ratio/(ratio+1);
+      var in_btc = bitcoinSteemRates.steem_btc * (1 - sbd_bias) + bitcoinSteemRates.sbd_btc * sbd_bias;
+      var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
+      var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
+      resolve({
+        rate: after_curation,
+        symbol: fiat_values[user_settings.chosen_fiat]
+      });
+    });
+  });
+}
+
+function NotifyTabs(){
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
+  });
+}
 
 var Manager = new SettingsManager();
 
@@ -204,24 +225,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.msg == "save_settings") {
     Manager.set("user_settings", request.settings);
     sendResponse("ok");
+    NotifyTabs();
   } else if (request.msg == "request_display_info") {
-    $.when(
-      Manager.getSteemSbdRatio(),
-      Manager.getBitcoinSteemRates(),
-      Manager.getBitcoinFiatRates(),
-      )
-    .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
-      var user_settings = Manager.get("user_settings", user_defaults);
-      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range : ratio/(ratio+1);
-      var in_btc = bitcoinSteemRates.steem_btc * (1 - sbd_bias) + bitcoinSteemRates.sbd_btc * sbd_bias;
-      var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
-      sendResponse({
-        rate: in_fiat,
-        symbol: fiat_values[user_settings.chosen_fiat]
-      });
-    });
+    CalculateDisplayInfo()
+      .then(sendResponse);
   }
   // Note: Returning true is required here!
   //  ref: http://stackoverflow.com/questions/20077487/chrome-extension-message-passing-response-not-sent
   return true; 
-});
+})
