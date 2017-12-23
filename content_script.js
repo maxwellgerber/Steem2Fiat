@@ -18,16 +18,8 @@ function BuildFoo(convert_rate, symbol) {
 }
 
 chrome.runtime.sendMessage({msg: "request_display_info"}, function(response) {
-	$.when(
-		$.getJSON(`https://api.coinmarketcap.com/v1/ticker/STEEM/?convert=${response.chosen_fiat}`),
-		$.getJSON(`https://api.coinmarketcap.com/v1/ticker/STEEM-dollars/?convert=${response.chosen_fiat}`),
-		$.ready
-	).done(function(steem, sbd){
-		var steem_price = Number(steem[0][0][`price_${response.chosen_fiat.toLowerCase()}`]);
-		var sbd_price = Number(sbd[0][0][`price_${response.chosen_fiat.toLowerCase()}`]);
-		var foo = BuildFoo(steem_price/3 + sbd_price*2/3, response.symbol);
-		foo();
-		window.addEventListener("scroll", foo);
-	}); 
+	console.log(response)
+	var foo = BuildFoo(response.rate, response.symbol);
+	foo();
+	window.addEventListener("scroll", foo);
 });
-
