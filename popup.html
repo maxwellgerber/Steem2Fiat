@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="css/popup.css">
+        <link rel="stylesheet" type="text/css" href="css/select.css">
+        <link rel="stylesheet" type="text/css" href="css/slider.css">
+        <script src="vendor/jquery.min.js"></script>
+        <script src="popup.js"></script>
+    </head>
+    <!-- Set tabindex to work around Chromium issue 304532 -->
+    <body tabindex="1">
+        <header>
+            <img id="logo" src="img/steem_icon.png">
+            <h2>Steem2Fiat</h2>
+        </header>
+        <hr class="hidden">
+        <div class="wrapper" id="loadWrapper">
+            <img src="img/loading.svg" id="loader">
+        </div>
+        <div class="wrapper hidden">
+            <label for="fiat">Fiat Type</label>
+            <div class="styled-select blue semi-square right-input">
+                <select id="fiat"></select>
+            </div>
+        </div>
+        <div class="wrapper hidden">
+            <label for="datasource">Source</label>
+            <div class="styled-select blue semi-square right-input">
+                <select id="datasource">
+                </select>
+            </div>
+        </div>
+        <hr class="hidden">
+        <div class="wrapper hidden">
+            <label class="check-container">Remove Curator Rewards
+                <input type="checkbox" id="curator" value="curator">
+                <span class="checkmark semi-square"></span>
+            </label>
+        </div>
+        <hr class="hidden">
+        <div class="wrapper hidden">
+            <input type="number" min="0" max="100" value="50" class="left-input number-input" id="payout_sbd" disabled>
+            <input type="number" min="0" max="100" value="50" class="right-input number-input" id="payout_steem" disabled>
+        </div>
+        <div class="wrapper hidden">
+            <span class="left-input">SBD</span>
+            <span class="right-input">Steem</span>
+            <div class="rangewrapper">
+                <input type="range" min="0" max="100" value="50" class="slider" id="payout_range" disabled>
+            </div>
+        </div>
+        <div class="wrapper hidden">
+            <label class="check-container"">Use Custom Payout Ratio
+                <input type="checkbox" id="custom_ratio" value="custom_ratio">
+                <span class="checkmark semi-square"></span>
+            </label>
+        </div>
+        <hr class="hidden">
+        <div class="wrapper hidden">
+            <button id="saveButton" class="button" style="margin-left: 55.8px">Save Settings</button>
+        </div>
+    </body>
+</html>

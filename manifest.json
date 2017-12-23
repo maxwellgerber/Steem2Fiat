@@ -7,13 +7,21 @@
 		"128": "steem128.png"
 	},
 	"browser_action": {
-    	"default_icon": "steem128.png"
+    	"default_icon": "img/steem128.png",
+    	"default_popup": "popup.html",
+    	"default_title": "Steem2Fiat Settings"
   	},
 	"content_scripts": [
 		{ 
 			"run_at" :"document_end",
 			"matches": ["https://*.steemit.com/*"],
-			"js": ["content_script.js"]
+			"js": ["content_script.js", "vendor/jquery.min.js"]
 		}
+	],	
+	"background": {
+		"scripts": ["vendor/jquery.min.js", "background.js"]
+	},
+	"permissions": [
+		"storage", "*://*/*"
 	]
 }
