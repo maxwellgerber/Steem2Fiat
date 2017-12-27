@@ -1,7 +1,14 @@
+function sendMessage(msg) {
+    return new Promise((resolve,reject)=> {
+        chrome.runtime.sendMessage(msg, resolve)
+    })
+}
+
 function loadCountries() {
-    chrome.runtime.sendMessage({
+    sendMessage({
         msg: "request_fiats"
-    }, function(response) {
+    })
+    .then((response)=>{
         console.log(response);
         $.each(response.fiat_values, function(currency_code, symbol) {
             $('#fiat').append($("<option></option>").attr("value", currency_code).text(`${currency_code} ${symbol}`));
@@ -10,9 +17,10 @@ function loadCountries() {
 }
 
 function loadExchanges() {
-    chrome.runtime.sendMessage({
+    sendMessage({
         msg: "request_exchanges"
-    }, function(response) {
+    })
+    .then((response)=>{
         console.log(response);
         $.each(response.exchanges, function(idx, exchange) {
             $('#datasource').append($("<option></option>").attr("value", exchange).text(exchange));
@@ -20,10 +28,21 @@ function loadExchanges() {
     });
 }
 
+function loadPrice() {
+    sendMessage({
+        msg: "request_display_info"
+    })
+    .then((response)=>{
+        var fiat = response.rate.toLocaleString(navigator.language, {maximumFractionDigits:2});
+        $("#priceholder").html(`${response.symbol}${fiat}`)
+    })
+}
+
 function loadOptions() {
-    chrome.runtime.sendMessage({
+    sendMessage({
         msg: "request_settings"
-    }, function(response) {
+    })
+    .then((response)=>{
         console.log(response);
         $("#fiat").val(response.chosen_fiat);
         $("#datasource").val(response.datasource);
@@ -54,12 +73,11 @@ function saveOptions() {
         custom_ratio: $("#custom_ratio")[0].checked,
         payout_range: $("#payout_range").val()
     }
-    chrome.runtime.sendMessage({
+    sendMessage({
         msg: "save_settings",
         settings: settings
-    }, function(response) {
-        window.close();
-    });
+    })
+    .then(window.close);
 }
 
 function calcSbd() {
@@ -104,9 +122,10 @@ function handleRatioChange() {
     if ($("#custom_ratio")[0].checked) {
         enableSelectors();
     } else {
-        chrome.runtime.sendMessage({
+        sendMessage({
             msg: "request_settings"
-        }, function(response) {
+        })
+        .then((response)=>{
             console.log(response);
             $("#payout_range").val(response.api_payout_range);
             disableSelectors();
@@ -116,6 +135,7 @@ function handleRatioChange() {
 }
 
 $(document).ready(function() {
+    loadPrice();
     loadCountries();
     loadExchanges();
     loadOptions();
