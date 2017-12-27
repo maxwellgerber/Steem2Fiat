@@ -226,7 +226,13 @@ function CalculateDisplayInfo() {
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
       resolve({
         rate: after_curation,
-        symbol: fiat_values[user_settings.chosen_fiat]
+        symbol: fiat_values[user_settings.chosen_fiat],
+        sbd_bias: sbd_bias,
+        steem_btc: bitcoinSteemRates.steem_btc,
+        sbd_btc: bitcoinSteemRates.sbd_btc,
+        curator: user_settings.curator,
+        btc_fiat: bitcoinFiatRates[user_settings.chosen_fiat],
+        source: user_settings.datasource
       });
     });
   });

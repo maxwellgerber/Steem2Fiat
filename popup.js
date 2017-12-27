@@ -35,6 +35,18 @@ function loadPrice() {
     .then((response)=>{
         var fiat = response.rate.toLocaleString(navigator.language, {maximumFractionDigits:2});
         $("#priceholder").html(`${response.symbol}${fiat}`)
+        var curator = response.curator ? "-25% Curator Rewards" : ""
+        var explanation = `
+                Parameters:<br>
+                Split between Steem/SBD: ${response.sbd_bias.toFixed(2)}/${(1-response.sbd_bias).toFixed(2)} <br>
+                Steem/BTC and SBD/BTC prices: ${response.source} <br>
+                Steem price in BTC: ${response.steem_btc} <br>
+                SBD price in BTC: ${response.sbd_btc} <br> 
+                BTC/Fiat prices: blockchain.info<br>
+                Current BTC price in Fiat : ${response.btc_fiat}<br> 
+                ${curator}
+        `
+        $("#answer").html(explanation)
     })
 }
 
@@ -58,9 +70,9 @@ function loadOptions() {
         }
         calcRange();
         setTimeout(()=> {
-            $(".wrapper").removeClass("hidden");
-            $("hr").removeClass("hidden");
-            $("#loadWrapper").addClass("hidden");  
+            $(".wrapper").toggleClass("hidden");
+            $("hr").toggleClass("hidden");
+            // $("#loadWrapper").addClass("hidden");  
         }, 450);
     });
 }
@@ -134,6 +146,10 @@ function handleRatioChange() {
     }
 }
 
+function toggleAnswer() {
+    $("#answer").toggleClass("hidden");
+}
+
 $(document).ready(function() {
     loadPrice();
     loadCountries();
@@ -144,4 +160,5 @@ $(document).ready(function() {
     $("#payout_steem").change(calcSteem);
     $("#payout_range").change(calcRange);
     $("#custom_ratio").change(handleRatioChange);
+    $("#question").click(toggleAnswer);
 })
