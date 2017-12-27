@@ -231,8 +231,11 @@ function CalculateDisplayInfo() {
 }
 
 function NotifyTabs(){
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
+  chrome.tabs.query({}, function(tabs) {
+    var message = {msg: "recalculate"};
+    for (var i=0; i<tabs.length; ++i) {
+        chrome.tabs.sendMessage(tabs[i].id, message);
+    }
   });
 }
 
