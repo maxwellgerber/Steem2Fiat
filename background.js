@@ -148,8 +148,6 @@ class SettingsManager{
   }
 
   set(key,val) {
-    console.log(val);
-    console.log(JSON.stringify(val));
     localStorage.setItem(key, JSON.stringify(val)); 
   }
 
@@ -158,15 +156,9 @@ class SettingsManager{
       var stored = this.get("steem_sbd_ratio");
       if (stored === undefined || IsExpired(stored.timestamp)) {
         RPCSteemSbdRatio().then(data => {
-          console.log(data);
-          console.log(typeof data);
-          console.log(data.result);
           var temp = data.result.base;
-          console.log(temp);
           temp = temp.substring(0, temp.length-4);
-          console.log(temp);
           temp = Number(temp);
-          console.log(temp);
           var obj = {value: temp, timestamp: Date.now()};
           this.set("steem_sbd_ratio", obj);
           resolve(obj.value); 
