@@ -15,9 +15,6 @@
 		{ 
 			"run_at" :"document_start",
 			"matches": ["https://*.steemit.com/*"],
-<<<<<<< HEAD
-			"js": ["content_script.js", "vendor/jquery.min.js"]
-=======
 			"js": ["content_scripts/steemit.js", "vendor/jquery.min.js"]
 		},
 		{ 
@@ -39,7 +36,11 @@
 			"run_at" :"document_start",
 			"matches": ["https://*.busy.org/*"],
 			"js": ["content_scripts/busy.js", "vendor/jquery.min.js"]
->>>>>>> b6b8c82... Performance overhaul
+		},
+		{ 
+			"run_at" :"document_start",
+			"matches": ["https://*.steemd.com/*"],
+			"js": ["content_scripts/steemd.js", "vendor/jquery.min.js"]
 		}
 	],	
 	"background": {
@@ -47,13 +48,8 @@
 	},
 	"permissions": [
 		"storage", "*://*/*"
-<<<<<<< HEAD
-	]
-}
-=======
 	], 
 	"web_accessible_resources": [
 		"img/steem_icon.png"
 		]
 }
->>>>>>> b6b8c82... Performance overhaul
