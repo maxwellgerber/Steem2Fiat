@@ -13,9 +13,33 @@
   	},
 	"content_scripts": [
 		{ 
-			"run_at" :"document_end",
+			"run_at" :"document_start",
 			"matches": ["https://*.steemit.com/*"],
+<<<<<<< HEAD
 			"js": ["content_script.js", "vendor/jquery.min.js"]
+=======
+			"js": ["content_scripts/steemit.js", "vendor/jquery.min.js"]
+		},
+		{ 
+			"run_at" :"document_start",
+			"matches": ["https://*.dmania.lol/*"],
+			"js": ["content_scripts/dmania.js", "vendor/jquery.min.js"]
+		},
+		{ 
+			"run_at" :"document_start",
+			"matches": ["https://*.d.tube/*"],
+			"js": ["content_scripts/dtube.js", "vendor/jquery.min.js"]
+		},
+		{ 
+			"run_at" :"document_start",
+			"matches": ["https://*.utopian.io/*"],
+			"js": ["content_scripts/utopian.js", "vendor/jquery.min.js"]
+		},
+		{ 
+			"run_at" :"document_start",
+			"matches": ["https://*.busy.org/*"],
+			"js": ["content_scripts/busy.js", "vendor/jquery.min.js"]
+>>>>>>> b6b8c82... Performance overhaul
 		}
 	],	
 	"background": {
@@ -23,5 +47,13 @@
 	},
 	"permissions": [
 		"storage", "*://*/*"
+<<<<<<< HEAD
 	]
 }
+=======
+	], 
+	"web_accessible_resources": [
+		"img/steem_icon.png"
+		]
+}
+>>>>>>> b6b8c82... Performance overhaul
