@@ -8,8 +8,8 @@ Clone the repo and follow the instructions found [here](https://stackoverflow.co
 ## Completed Features
 - [x] Customize Fiat Currency (USD, GBP, EUR, etc.)
 - [x] Select multiple price sources (Bittrex, Poloniex, etc.)
+- [x] Expand support to other Steem sites (ChainBB, Utopian.io, etc.)
 
 ## Coming Soon
-- [ ] Expand support to other Steem sites (ChainBB, Utopian.io, etc.)
 - [ ] Integrated Analytics on Steem payout prices over time
-
+- [ ] Expand support to new sites as necessary

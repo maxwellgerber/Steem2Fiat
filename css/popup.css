@@ -94,3 +94,15 @@ label {
     width: 80px;
     margin: 0 85px;
 }
+
+#question {
+    opacity: .65;
+    font-size: .45em;
+    cursor: pointer;
+}
+
+#answer {
+    opacity: .85;
+    font-size: .55em;
+    text-align: left;
+}

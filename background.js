@@ -148,8 +148,6 @@ class SettingsManager{
   }
 
   set(key,val) {
-    console.log(val);
-    console.log(JSON.stringify(val));
     localStorage.setItem(key, JSON.stringify(val)); 
   }
 
@@ -158,15 +156,9 @@ class SettingsManager{
       var stored = this.get("steem_sbd_ratio");
       if (stored === undefined || IsExpired(stored.timestamp)) {
         RPCSteemSbdRatio().then(data => {
-          console.log(data);
-          console.log(typeof data);
-          console.log(data.result);
           var temp = data.result.base;
-          console.log(temp);
           temp = temp.substring(0, temp.length-4);
-          console.log(temp);
           temp = Number(temp);
-          console.log(temp);
           var obj = {value: temp, timestamp: Date.now()};
           this.set("steem_sbd_ratio", obj);
           resolve(obj.value); 
@@ -226,15 +218,24 @@ function CalculateDisplayInfo() {
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
       resolve({
         rate: after_curation,
-        symbol: fiat_values[user_settings.chosen_fiat]
+        symbol: fiat_values[user_settings.chosen_fiat],
+        sbd_bias: sbd_bias,
+        steem_btc: bitcoinSteemRates.steem_btc,
+        sbd_btc: bitcoinSteemRates.sbd_btc,
+        curator: user_settings.curator,
+        btc_fiat: bitcoinFiatRates[user_settings.chosen_fiat],
+        source: user_settings.datasource
       });
     });
   });
 }
 
 function NotifyTabs(){
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, {msg: "recalculate"});
+  chrome.tabs.query({}, function(tabs) {
+    var message = {msg: "recalculate"};
+    for (var i=0; i<tabs.length; ++i) {
+        chrome.tabs.sendMessage(tabs[i].id, message);
+    }
   });
 }
 
