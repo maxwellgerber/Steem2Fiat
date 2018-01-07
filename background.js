@@ -31,9 +31,7 @@ const fiat_values = {
 const user_defaults = {
   chosen_fiat: "USD",
   datasource: "CoinMarketCap",
-  payout_range: 50,
-  curator: "false",
-  custom_ratio: "true"
+  curator: "false"
 }
 
 const exchanges = {
@@ -41,9 +39,6 @@ const exchanges = {
   Bittrex: GetBittrexRates,
   Poloniex: GetPoloniexRates,
   HitBTC: GetHitBTCRates
-}
-const application_defaults = {
-  api_payout_range: 78
 }
 
 const rpc_endpoints = [
@@ -245,8 +240,8 @@ function CalculateDisplayInfo() {
       )
     .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
       var user_settings = Manager.get("user_settings", user_defaults);
-      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range/100 : ratio/(ratio+1);
-      var in_btc = bitcoinSteemRates.steem_btc * (1 - sbd_bias) + bitcoinSteemRates.sbd_btc * sbd_bias;
+      var sbd_bias = ratio;
+      var in_btc = bitcoinSteemRates.steem_btc * .5 / ratio + bitcoinSteemRates.sbd_btc * .5;
       var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
       resolve({
