@@ -31,7 +31,8 @@ const fiat_values = {
 const user_defaults = {
   chosen_fiat: "USD",
   datasource: "CoinMarketCap",
-  curator: "false"
+  curator: "false",
+  liquid: "false"
 }
 
 const exchanges = {
@@ -81,13 +82,7 @@ function RPCSteemSbdRatio() {
       resolve(JSON.parse(data));
     })
     .catch(e => {
-      console.log("All RPC servers are down. STEEM probably isn't looking too hot.");
-      resolve({
-        result: {
-          base:"6.431 SBD",
-          quote:"1.000 STEEM"
-        }
-      });
+      console.log("RPC server down.");
     })
   });
 }
@@ -241,13 +236,15 @@ function CalculateDisplayInfo() {
     .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
       var user_settings = Manager.get("user_settings", user_defaults);
       var sbd_bias = ratio;
-      var in_btc = bitcoinSteemRates.steem_btc * .5 / ratio + bitcoinSteemRates.sbd_btc * .5;
+      var in_btc = bitcoinSteemRates.sbd_btc * .5;
+      in_btc = user_settings.liquid ? in_btc : in_btc + (bitcoinSteemRates.steem_btc * .5 / ratio);
       var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
       resolve({
         rate: after_curation,
         symbol: fiat_values[user_settings.chosen_fiat],
         sbd_bias: sbd_bias,
+        liquid: user_settings.liquid,
         steem_btc: bitcoinSteemRates.steem_btc,
         sbd_btc: bitcoinSteemRates.sbd_btc,
         curator: user_settings.curator,

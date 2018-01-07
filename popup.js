@@ -40,7 +40,7 @@ function loadPrice() {
         var pricefeed = response.sbd_bias.toLocaleString(navigator.language, {
             maximumFractionDigits: 2, minimumFractionDigits: 2
         });
-        var explanation = `
+        var explanation1 = `
                 Parameters:<br>
                 STEEM price feed: ${pricefeed}<br>
                 Steem/BTC and SBD/BTC prices: ${response.source} <br>
@@ -51,7 +51,17 @@ function loadPrice() {
                 ${curator}<br>
                 <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
         `;
-        $("#answer").html(explanation);
+        var explanation2 = `
+                Parameters:<br>
+                Only Liquid (SBD) Rewards shown
+                SBD/BTC prices: ${response.source} <br>
+                SBD price in BTC: ${response.sbd_btc} <br> 
+                BTC/Fiat prices: blockchain.info<br>
+                Current BTC price in Fiat : ${response.btc_fiat}<br> 
+                ${curator}<br>
+                <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
+        `;
+        $("#answer").html(response.liquid ? explanation2 : explanation1);
     })
 }
 
@@ -64,7 +74,8 @@ function loadOptions() {
         $("#fiat").val(response.chosen_fiat);
         $("#datasource").val(response.datasource);
         $("#curator")[0].checked = response.curator;
-        $('#payout_range').val(response.api_payout_range)
+        $('#payout_range').val(response.api_payout_range);
+        $("#liquid")[0].checked = response.liquid;
         calcRange();
         setTimeout(()=> {
             $(".wrapper").toggleClass("hidden");
@@ -78,7 +89,8 @@ function saveOptions() {
     var settings = {
         chosen_fiat: $("#fiat").val(),
         datasource: $("#datasource").val(),
-        curator: $("#curator")[0].checked
+        curator: $("#curator")[0].checked,
+        liquid: $("#liquid")[0].checked
     }
     sendMessage({
         msg: "save_settings",
