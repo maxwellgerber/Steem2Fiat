@@ -207,8 +207,7 @@ class SettingsManager{
     })
   }
 
-  getBitcoinSteemRates() {
-    var datasource = this.get("user_settings", user_defaults).datasource;
+  getBitcoinSteemRates(datasource) {
     var key = datasource + "_data";
     var ExchangeFunc = exchanges[datasource];
     return new Promise((resolve, reject) => {      
@@ -227,14 +226,17 @@ class SettingsManager{
 }
 
 function CalculateDisplayInfo() {
+  return _CalculateDisplayInfo(Manager.get("user_settings", user_defaults));
+}
+
+function _CalculateDisplayInfo(user_settings) {
   return new Promise((resolve, reject) => {
     $.when(
       Manager.getSteemSbdRatio(),
-      Manager.getBitcoinSteemRates(),
+      Manager.getBitcoinSteemRates(user_settings.datasource),
       Manager.getBitcoinFiatRates(),
       )
     .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
-      var user_settings = Manager.get("user_settings", user_defaults);
       var sbd_bias = ratio;
       var in_btc = bitcoinSteemRates.sbd_btc * .5;
       in_btc = user_settings.liquid ? in_btc : in_btc + (bitcoinSteemRates.steem_btc * .5 / ratio);
@@ -287,6 +289,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } 
   else if (request.msg == "request_display_info") {
     CalculateDisplayInfo()
+      .then(sendResponse);
+  }
+  else if (request.msg == "request_tmp_display_info") {
+    _CalculateDisplayInfo(request.settings)
       .then(sendResponse);
   }
   // Note: Returning true is required here!

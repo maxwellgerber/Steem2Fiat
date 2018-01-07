@@ -28,41 +28,57 @@ function loadExchanges() {
     });
 }
 
+function loadPriceCallback(response) {
+    var fiat = response.rate.toLocaleString(navigator.language, {maximumFractionDigits:2});
+    $("#priceholder").html(`${response.symbol}${fiat}`);
+    var curator = response.curator ? "-25% Curator Rewards" : "";
+    var url = "https://steemit.com/steem/@dragosroua/steem-supply-update-rewards-algorithm-rewrite-major-cleanup-version-bump";
+    var pricefeed = response.sbd_bias.toLocaleString(navigator.language, {
+        maximumFractionDigits: 2, minimumFractionDigits: 2
+    });
+    var explanation1 = `
+            Parameters:<br>
+            STEEM price feed: ${pricefeed}<br>
+            Steem/BTC and SBD/BTC prices: ${response.source} <br>
+            Steem price in BTC: ${response.steem_btc} <br>
+            SBD price in BTC: ${response.sbd_btc} <br> 
+            BTC/Fiat prices: blockchain.info<br>
+            Current BTC price in Fiat : ${response.btc_fiat}<br> 
+            ${curator}<br>
+            <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
+    `;
+    var explanation2 = `
+            Parameters:<br>
+            Only Liquid (SBD) Rewards shown
+            SBD/BTC prices: ${response.source} <br>
+            SBD price in BTC: ${response.sbd_btc} <br> 
+            BTC/Fiat prices: blockchain.info<br>
+            Current BTC price in Fiat : ${response.btc_fiat}<br> 
+            ${curator}<br>
+            <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
+    `;
+    $("#answer").html(response.liquid ? explanation2 : explanation1);
+}
+
 function loadPrice() {
     sendMessage({
         msg: "request_display_info"
     })
-    .then((response)=>{
-        var fiat = response.rate.toLocaleString(navigator.language, {maximumFractionDigits:2});
-        $("#priceholder").html(`${response.symbol}${fiat}`);
-        var curator = response.curator ? "-25% Curator Rewards" : "";
-        var url = "https://steemit.com/steem/@dragosroua/steem-supply-update-rewards-algorithm-rewrite-major-cleanup-version-bump";
-        var pricefeed = response.sbd_bias.toLocaleString(navigator.language, {
-            maximumFractionDigits: 2, minimumFractionDigits: 2
-        });
-        var explanation1 = `
-                Parameters:<br>
-                STEEM price feed: ${pricefeed}<br>
-                Steem/BTC and SBD/BTC prices: ${response.source} <br>
-                Steem price in BTC: ${response.steem_btc} <br>
-                SBD price in BTC: ${response.sbd_btc} <br> 
-                BTC/Fiat prices: blockchain.info<br>
-                Current BTC price in Fiat : ${response.btc_fiat}<br> 
-                ${curator}<br>
-                <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
-        `;
-        var explanation2 = `
-                Parameters:<br>
-                Only Liquid (SBD) Rewards shown
-                SBD/BTC prices: ${response.source} <br>
-                SBD price in BTC: ${response.sbd_btc} <br> 
-                BTC/Fiat prices: blockchain.info<br>
-                Current BTC price in Fiat : ${response.btc_fiat}<br> 
-                ${curator}<br>
-                <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
-        `;
-        $("#answer").html(response.liquid ? explanation2 : explanation1);
+    .then(loadPriceCallback);
+}
+
+function loadSamplePrice() {
+    var settings = {
+        chosen_fiat: $("#fiat").val(),
+        datasource: $("#datasource").val(),
+        curator: $("#curator")[0].checked,
+        liquid: $("#liquid")[0].checked
+    }
+    sendMessage({
+        msg: "request_tmp_display_info",
+        settings: settings
     })
+    .then(loadPriceCallback);
 }
 
 function loadOptions() {
@@ -117,6 +133,7 @@ $(document).ready(function() {
     loadCountries();
     loadExchanges();
     loadOptions();
+    $("#fiat, #datasource, #curator, #liquid").change(loadSamplePrice);
     $("#saveButton").click(saveOptions);
     $("#question").click(toggleAnswer);
 })
