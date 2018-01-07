@@ -32,8 +32,8 @@ const user_defaults = {
   chosen_fiat: "USD",
   datasource: "CoinMarketCap",
   payout_range: 50,
-  curator: "true",
-  custom_ratio: "false"
+  curator: "false",
+  custom_ratio: "true"
 }
 
 const exchanges = {
@@ -46,24 +46,57 @@ const application_defaults = {
   api_payout_range: 78
 }
 
+const rpc_endpoints = [
+  "https://steemd.steemit.com/rpc",
+  "https://steemd.minnowsupportproject.org/rpc",
+  "https://steemd.privex.io/rpc",
+  "https://rpc.steemliberator.com/rpc",
+  "https://gtg.steem.house:8090"
+]
+
 // Invalidate cache entries after 20 minutes
 const cache_timeout = 1000 * 60 * 20;
 
+// https://github.com/m0ppers/promise-any/blob/23d2b8ee2c07052a267180c114746ea4e955655b/index.js
+function reverse(promise) {
+    return new Promise((resolve, reject) => Promise.resolve(promise).then(reject, resolve));
+}
+
+function promiseAny(iterable) {
+    return reverse(Promise.all([...iterable].map(reverse)));
+}
 
 function RPCSteemSbdRatio() {
-  return new Promise((resolve, reject) => {
-    $.post("https://steemd.steemit.com/rpc", 
+
+  var helper = function(endpoint) {
+    return $.post(endpoint,
       JSON.stringify({
         id:17,
         method:"get_current_median_history_price",
         params:[], 
         jsonrpc:2.0})
       )
+  }
+
+  var promises = rpc_endpoints.map(helper)
+
+  return new Promise((resolve, reject) => {
+    promiseAny(promises)
     .then(data => {
       resolve(JSON.parse(data));
     })
+    .catch(e => {
+      console.log("All RPC servers are down. STEEM probably isn't looking too hot.");
+      resolve({
+        result: {
+          base:"6.431 SBD",
+          quote:"1.000 STEEM"
+        }
+      });
+    })
   });
 }
+
 
 function GetBTCFiatExchangeRates() {
   return new Promise((resolve, reject) => {
