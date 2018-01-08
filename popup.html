@@ -20,11 +20,24 @@
         </div>
         <div class="wrapper hidden" style="text-align: center;">
             <h2 style="margin: 0">
-                <img src="https://steemit-production-imageproxy-upload.s3.amazonaws.com/DQmPBTSoFeabenhqLDu3oYa2sxZCpCGn6dQPvaqBuwZSdyA" style="height: 1.3em; margin: 0 -10px -7px 0">
+                <img src="img/steem_icon.png" style="height: 1.3em; margin: 0 -10px -7px 0">
                 1.00 = <span id="priceholder"></span> <sup id="question">?</sup>
             </h2>
             <p id="answer" class="hidden" >
             </p>
+        </div>
+        <hr class="hidden">
+        <div class="wrapper hidden">
+            <label style="display: block">Steem/SBD Ratio</label>
+            <input type="number" style="cursor: default;" class="number-input" id="payout_sbd" disabled>
+            <input type="number" style="cursor: default;" class="right-input number-input" id="payout_steem" disabled>
+        </div>
+        <div class="wrapper hidden">
+            <span class="left-input">SBD</span>
+            <span class="right-input">Steem</span>
+            <div class="rangewrapper">
+                <input type="range" min="0" max="100" value="50" class="slider" id="payout_range" disabled>
+            </div>
         </div>
         <hr class="hidden">
         <div class="wrapper hidden">
@@ -42,29 +55,36 @@
         </div>
         <hr class="hidden">
         <div class="wrapper hidden">
-            <label class="check-container">Remove Curator Rewards
+            <label class="check-container">Remove Curator Cut
                 <input type="checkbox" id="curator" value="curator">
                 <span class="checkmark semi-square"></span>
             </label>
         </div>
         <hr class="hidden">
         <div class="wrapper hidden">
-            <input type="number" min="0" max="100" value="50" class="left-input number-input" id="payout_sbd" disabled>
-            <input type="number" min="0" max="100" value="50" class="right-input number-input" id="payout_steem" disabled>
-        </div>
-        <div class="wrapper hidden">
-            <span class="left-input">SBD</span>
-            <span class="right-input">Steem</span>
-            <div class="rangewrapper">
-                <input type="range" min="0" max="100" value="50" class="slider" id="payout_range" disabled>
-            </div>
-        </div>
-        <div class="wrapper hidden">
-            <label class="check-container"">Use Custom Payout Ratio
-                <input type="checkbox" id="custom_ratio" value="custom_ratio">
+            <label class="check-container">Remove Vested (SP) Cut
+                <input type="checkbox" id="liquid" value="liquid">
                 <span class="checkmark semi-square"></span>
             </label>
         </div>
+<!--         <hr class="hidden">
+        <div class="wrapper hidden">
+            <label style="display: block">Reward Display Options</label>
+
+            <label class="radio-container">Fiat and STU
+                <input type="radio" name="display_opt" value="1">
+                <span class="radio-checkmark"></span>
+            </label>
+            <label class="radio-container">Fiat Only
+                <input type="radio" name="display_opt" value="2">
+                <span class="radio-checkmark"></span>
+            </label>
+            <label class="radio-container">Fiat and SBD
+                <input type="radio" name="display_opt" value="3">
+                <span class="radio-checkmark"></span>
+            </label>
+        </div> -->
+
         <hr class="hidden">
         <div class="wrapper hidden">
             <button id="saveButton" class="button" style="margin-left: 55.8px">Save Settings</button>

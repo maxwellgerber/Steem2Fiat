@@ -16,7 +16,7 @@ const fiat_values = {
   "KRW":"₩",
   // "MXN":"$",
   "NZD":"$",
-  // "PHP":"₱",
+  "PHP":"₱",
   // "PKR":"Rp",
   "PLN":"zł",
   "RUB":"₽",
@@ -31,9 +31,8 @@ const fiat_values = {
 const user_defaults = {
   chosen_fiat: "USD",
   datasource: "CoinMarketCap",
-  payout_range: 50,
-  curator: "true",
-  custom_ratio: "false"
+  curator: "false",
+  liquid: "false"
 }
 
 const exchanges = {
@@ -42,42 +41,67 @@ const exchanges = {
   Poloniex: GetPoloniexRates,
   HitBTC: GetHitBTCRates
 }
-const application_defaults = {
-  api_payout_range: 78
-}
+
+const rpc_endpoints = [
+  "https://steemd.steemit.com/rpc",
+  "https://steemd.minnowsupportproject.org/rpc",
+  "https://steemd.privex.io/rpc",
+  "https://rpc.steemliberator.com/rpc",
+  "https://gtg.steem.house:8090"
+]
 
 // Invalidate cache entries after 20 minutes
 const cache_timeout = 1000 * 60 * 20;
 
+// https://github.com/m0ppers/promise-any/blob/23d2b8ee2c07052a267180c114746ea4e955655b/index.js
+function reverse(promise) {
+    return new Promise((resolve, reject) => Promise.resolve(promise).then(reject, resolve));
+}
+
+function promiseAny(iterable) {
+    return reverse(Promise.all([...iterable].map(reverse)));
+}
 
 function RPCSteemSbdRatio() {
-  return new Promise((resolve, reject) => {
-    $.post("https://steemd.steemit.com/rpc", 
+
+  var helper = function(endpoint) {
+    return $.post(endpoint,
       JSON.stringify({
         id:17,
         method:"get_current_median_history_price",
         params:[], 
         jsonrpc:2.0})
       )
+  }
+
+  var promises = rpc_endpoints.map(helper)
+
+  return new Promise((resolve, reject) => {
+    promiseAny(promises)
     .then(data => {
       resolve(JSON.parse(data));
+    })
+    .catch(e => {
+      console.log("RPC server down.");
     })
   });
 }
 
+
 function GetBTCFiatExchangeRates() {
   return new Promise((resolve, reject) => {
-    $.get("https://blockchain.info/ticker")
-      .then(data => {
-        var cleaned = {};
-        Object.keys(data).forEach(function(key,index) {
-          cleaned[key] = data[key].last;
-        });
-        // $(data).each((k, v) => {
-        //   cleaned[k] = v.last;
-        // })
-        resolve(cleaned);
-      })
+    $.when(
+      $.get("https://blockchain.info/ticker"),
+      $.get("https://www.coingecko.com/coins/currency_exchange_rates.json")
+    ).done((bcdata, cgdata) => {
+      var cleaned = {
+        "PHP": cgdata[0].rates.php
+      };
+      Object.keys(bcdata[0]).forEach((key,index) => {
+        cleaned[key] = bcdata[0][key].last;
+      });
+      resolve(cleaned);
+    })
   });
 }
 
@@ -184,8 +208,7 @@ class SettingsManager{
     })
   }
 
-  getBitcoinSteemRates() {
-    var datasource = this.get("user_settings", user_defaults).datasource;
+  getBitcoinSteemRates(datasource) {
     var key = datasource + "_data";
     var ExchangeFunc = exchanges[datasource];
     return new Promise((resolve, reject) => {      
@@ -204,22 +227,27 @@ class SettingsManager{
 }
 
 function CalculateDisplayInfo() {
+  return _CalculateDisplayInfo(Manager.get("user_settings", user_defaults));
+}
+
+function _CalculateDisplayInfo(user_settings) {
   return new Promise((resolve, reject) => {
     $.when(
       Manager.getSteemSbdRatio(),
-      Manager.getBitcoinSteemRates(),
+      Manager.getBitcoinSteemRates(user_settings.datasource),
       Manager.getBitcoinFiatRates(),
       )
     .done((ratio, bitcoinSteemRates, bitcoinFiatRates) => {
-      var user_settings = Manager.get("user_settings", user_defaults);
-      var sbd_bias = user_settings.custom_ratio ? user_settings.payout_range/100 : ratio/(ratio+1);
-      var in_btc = bitcoinSteemRates.steem_btc * (1 - sbd_bias) + bitcoinSteemRates.sbd_btc * sbd_bias;
+      var sbd_bias = ratio;
+      var in_btc = bitcoinSteemRates.sbd_btc * .5;
+      in_btc = user_settings.liquid ? in_btc : in_btc + (bitcoinSteemRates.steem_btc * .5 / ratio);
       var in_fiat = bitcoinFiatRates[user_settings.chosen_fiat] * in_btc;
       var after_curation = user_settings.curator ? in_fiat * .75 : in_fiat;
       resolve({
         rate: after_curation,
         symbol: fiat_values[user_settings.chosen_fiat],
         sbd_bias: sbd_bias,
+        liquid: user_settings.liquid,
         steem_btc: bitcoinSteemRates.steem_btc,
         sbd_btc: bitcoinSteemRates.sbd_btc,
         curator: user_settings.curator,
@@ -262,6 +290,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } 
   else if (request.msg == "request_display_info") {
     CalculateDisplayInfo()
+      .then(sendResponse);
+  }
+  else if (request.msg == "request_tmp_display_info") {
+    _CalculateDisplayInfo(request.settings)
       .then(sendResponse);
   }
   // Note: Returning true is required here!

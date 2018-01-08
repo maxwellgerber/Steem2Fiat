@@ -1,7 +1,9 @@
 
 var settings = {
 	selectors: "span.Payout, span.CommentFooter__payout",
-	css:"height=16.29 width=16.29 style=\"position:relative; top:3px\""
+	css:"height=16.29 width=16.29 style=\"position:relative; top:3px\"",
+    convert_rate: 1,
+    symbol: "$"
 }
 var imgurl = chrome.runtime.getURL("img/steem_icon.png");
 
@@ -41,6 +43,4 @@ function init() {
 
 init();
 setInterval(crawlPage, 500);
-chrome.extension.onMessage.addListener(()=>{
-    last_seen = 0;
-});
+chrome.extension.onMessage.addListener(init);
