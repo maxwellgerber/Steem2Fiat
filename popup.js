@@ -36,13 +36,14 @@ function loadPriceCallback(response) {
     var pricefeed = response.sbd_bias.toLocaleString(navigator.language, {
         maximumFractionDigits: 2, minimumFractionDigits: 2
     });
+    var fiat_source = (response.symbol == "₱") ? "coingecko.com" : "blockchain.info";
     var explanation1 = `
             Parameters:<br>
             STEEM price feed: ${pricefeed}<br>
             Steem/BTC and SBD/BTC prices: ${response.source} <br>
             Steem price in BTC: ${response.steem_btc} <br>
             SBD price in BTC: ${response.sbd_btc} <br> 
-            BTC/Fiat prices: blockchain.info<br>
+            BTC/Fiat prices: ${fiat_source}<br>
             Current BTC price in Fiat : ${response.btc_fiat}<br> 
             ${curator}<br>
             <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>
@@ -52,7 +53,7 @@ function loadPriceCallback(response) {
             Only Liquid (SBD) Rewards shown
             SBD/BTC prices: ${response.source} <br>
             SBD price in BTC: ${response.sbd_btc} <br> 
-            BTC/Fiat prices: blockchain.info<br>
+            BTC/Fiat prices: ${fiat_source}<br>
             Current BTC price in Fiat : ${response.btc_fiat}<br> 
             ${curator}<br>
             <sub>Learn more about how payouts are calculated <a href="${url}">here</a></sub>

@@ -16,7 +16,7 @@ const fiat_values = {
   "KRW":"₩",
   // "MXN":"$",
   "NZD":"$",
-  // "PHP":"₱",
+  "PHP":"₱",
   // "PKR":"Rp",
   "PLN":"zł",
   "RUB":"₽",
@@ -90,17 +90,18 @@ function RPCSteemSbdRatio() {
 
 function GetBTCFiatExchangeRates() {
   return new Promise((resolve, reject) => {
-    $.get("https://blockchain.info/ticker")
-      .then(data => {
-        var cleaned = {};
-        Object.keys(data).forEach(function(key,index) {
-          cleaned[key] = data[key].last;
-        });
-        // $(data).each((k, v) => {
-        //   cleaned[k] = v.last;
-        // })
-        resolve(cleaned);
-      })
+    $.when(
+      $.get("https://blockchain.info/ticker"),
+      $.get("https://www.coingecko.com/coins/currency_exchange_rates.json")
+    ).done((bcdata, cgdata) => {
+      var cleaned = {
+        "PHP": cgdata[0].rates.php
+      };
+      Object.keys(bcdata[0]).forEach((key,index) => {
+        cleaned[key] = bcdata[0][key].last;
+      });
+      resolve(cleaned);
+    })
   });
 }
 
